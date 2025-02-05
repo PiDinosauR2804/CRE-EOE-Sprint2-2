@@ -10,7 +10,6 @@ import torch.nn.functional as F
 from models import PeftFeatureExtractor
 from utils import mahalanobis
 
-import Prompt
 import re
 import wandb as loggerdb
 
