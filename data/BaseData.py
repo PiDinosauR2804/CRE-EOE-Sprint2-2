@@ -34,7 +34,7 @@ class BaseHidden:
         for idx in range(self.num_class):
             labels = idx
             mean = self.means[idx].cpu().numpy().astype("float32")
-            cov = self.covariance[idx].cpu().numpy().astype("float32")
+            cov = self.covariance.cpu().numpy().astype("float32")
             samples = self.generate_data_base_on_means_and_cov(labels, mean, cov, num*epochs)
             for epoch in range(epochs):
                 temp = samples[epoch*num:(epoch+1)*num]

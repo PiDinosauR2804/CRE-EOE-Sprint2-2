@@ -94,7 +94,7 @@ class EoETrainer(BaseTrainer):
 
             self.statistic(model, train_dataset, default_data_collator)
             
-            MemoryData = BaseHidden(model.num_labels, model.expert_distribution['class_mean'], model.expert_distribution['class_cov'])
+            MemoryData = BaseHidden(model.num_labels, model.expert_distribution['class_mean'], model.expert_distribution['accumulate_cov'])
             in_hidden_data = MemoryData.generate_hidden_data(self.args.num_sample_gen_per_epoch, self.args.gen_epochs)
             
             self.train_mlp(
