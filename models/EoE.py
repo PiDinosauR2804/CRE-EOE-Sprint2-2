@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from models import PeftFeatureExtractor
 from utils import mahalanobis
 
+import Prompt
 import re
 import wandb as loggerdb
 
@@ -53,11 +54,12 @@ class EoE(nn.Module):
             }
         ]
 
-
+        self.prompt_pools = []
         self.tau = 0.8
         self.label_description = {}
         self.label_description_ids = {}
         self.number_description = 3
+        self.temp_classifier = nn.ParameterList()
         self.classifier = nn.ParameterList()
 
     def preprocess_text(self, text):
@@ -123,6 +125,13 @@ class EoE(nn.Module):
             param.requires_grad = False
         new_classifier = nn.Linear(self.classifier_hidden_size, num_labels, device=self.device)
         self.classifier.append(new_classifier)
+        
+        for param in self.temp_classifier.parameters():
+            param.requires_grad = False
+        new_temp_classifier = nn.Linear(self.classifier_hidden_size, num_labels, device=self.device)
+        self.temp_classifier.append(new_temp_classifier)
+        
+        # self.prompt_pools.append(Prompt(self.args).to(self.args.device))
 
         self.feature_extractor.add_adapter(self.num_tasks)
 
@@ -309,13 +318,34 @@ class EoE(nn.Module):
                 expert_class_preds=all_score_over_class,
             )
         # only for training
+        
+        if "training_mlp" in kwargs and kwargs["training_mlp"]:
+            hidden_states = input_ids
+            logits = self.classifier[self.num_tasks](hidden_states)
+
+            offset_label = labels.to(dtype=torch.long)
+            loss = F.cross_entropy(logits, offset_label)
+            
+            preds = logits.max(dim=-1)[1]
+            
+            if "mlp" in kwargs and kwargs["mlp"]:
+                loggerdb.log_metrics({f"train/mlp_{self.num_tasks}": loss.item()})
+
+            indices = indices.tolist() if isinstance(indices, torch.Tensor) else indices
+            return ExpertOutput(
+                loss=loss,
+                preds=preds,
+                hidden_states=hidden_states,
+                indices=indices,
+            )
+        
         hidden_states = self.feature_extractor(
             input_ids=input_ids,
             attention_mask=attention_mask,
             indices=indices,
             **kwargs
         )
-        logits = self.classifier[self.num_tasks](hidden_states)
+        logits = self.temp_classifier[self.num_tasks](hidden_states)
 
         loss = None
         if self.training:

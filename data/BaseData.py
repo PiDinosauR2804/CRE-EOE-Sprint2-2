@@ -8,6 +8,38 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader, Sampler
 
+class BaseHidden:
+    def __init__(self, num_class, means, covariance):
+        self.num_class = num_class
+        self.means = means
+        self.covariance = covariance
+        self.train_data = None
+    
+    def generate_data_base_on_means_and_cov(self, labels, mean, covariance, num):
+        res = []
+        data = np.random.multivariate_normal(mean, covariance, num)
+        for sample in data:
+            ins = {
+                'input_ids':sample.tolist(),
+                'labels': labels,
+                'float_check': True,
+            }
+            res.append(ins)
+        return res
+
+    def generate_hidden_data(self, num, epochs):
+        res = []
+        for epoch in range(epochs):
+            res.append([])
+        for idx in range(self.num_class):
+            labels = idx
+            mean = self.means[idx].cpu().numpy().astype("float32")
+            cov = self.covariance[idx].cpu().numpy().astype("float32")
+            samples = self.generate_data_base_on_means_and_cov(labels, mean, cov, num*epochs)
+            for epoch in range(epochs):
+                temp = samples[epoch*num:(epoch+1)*num]
+                res[epoch].extend(temp)
+        return res
 
 class BaseData:
     def __init__(self, args):

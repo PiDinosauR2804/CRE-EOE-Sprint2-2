@@ -14,9 +14,9 @@ from transformers import set_seed
 import wandb as loggerdb
 
 
-from data import BaseDataset
+from data import BaseDataset, BaseHidden
 from trainers import BaseTrainer
-from utils import CustomCollatorWithPadding, relation_data_augmentation
+from utils import CustomCollatorWithPadding, relation_data_augmentation, CustomFloatCollatorWithPadding
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +32,7 @@ class EoETrainer(BaseTrainer):
             set_seed(seed)
             self.cur_seed = seed
         default_data_collator = CustomCollatorWithPadding(tokenizer)
+        float_data_collator = CustomFloatCollatorWithPadding(tokenizer)
 
         seen_labels = []
         all_cur_acc = []
@@ -92,6 +93,16 @@ class EoETrainer(BaseTrainer):
             )
 
             self.statistic(model, train_dataset, default_data_collator)
+            
+            MemoryData = BaseHidden(model.num_labels, model.expert_distribution['class_mean'], model.expert_distribution['class_cov'])
+            in_hidden_data = MemoryData.generate_hidden_data(self.args.num_sample_gen_per_epoch, self.args.gen_epochs)
+            
+            self.train_mlp(
+                model=model,
+                train_dataset=in_hidden_data,
+                data_collator=float_data_collator,
+                training_mlp2=False
+            ) 
 
             cur_test_data = data.filter(cur_labels, 'test')
             history_test_data = data.filter(seen_labels, 'test')
@@ -192,6 +203,62 @@ class EoETrainer(BaseTrainer):
                 progress_bar.update(1)
                 progress_bar.set_postfix({"Loss": loss.item()})
 
+        progress_bar.close()
+
+    def train_mlp(self, model, train_dataset, data_collator):
+        max_steps = self.args.num_sample_gen_per_epoch * self.args.classifier_epochs
+        num_examples = self.args.num_sample_gen_per_epoch * self.args.gen_epochs
+
+        logger.info("***** Running training *****")
+        logger.info(f"  Num examples = {num_examples}")
+        logger.info(f"  Num Epochs = {self.args.classifier_epochs}")
+        logger.info(f"  Train batch size = {self.args.train_batch_size}")
+        logger.info(f"  Total optimization steps = {max_steps}")
+        
+        no_decay = ["bias", "LayerNorm.weight"]
+        parameters = [
+            {'params': [p for n, p in model.named_parameters() if 'feature_extractor' not in n and not any(nd in n for nd in no_decay)],
+             'lr': self.args.classifier_learning_rate, 'weight_decay': 1e-2},
+            {'params': [p for n, p in model.named_parameters() if 'feature_extractor' not in n and any(nd in n for nd in no_decay)],
+             'lr': self.args.classifier_learning_rate, 'weight_decay': 0.0},
+        ]
+        self.optimizer = AdamW(parameters)
+
+        progress_bar = tqdm(range(max_steps))
+        
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                print(name)
+                # break
+        
+        for epoch in range(self.args.classifier_epochs):
+            
+            sub_train_dataset = BaseDataset(train_dataset[epoch % self.args.gen_epochs])  
+
+            train_dataloader = DataLoader(
+                sub_train_dataset,
+                batch_size=self.args.train_batch_size,
+                shuffle=True,
+                collate_fn=data_collator
+            )            
+
+            model.train()
+            for step, inputs in enumerate(train_dataloader):
+                self.optimizer.zero_grad()
+
+                inputs = {k: v.to(self.args.device) for k, v in inputs.items()}
+                inputs.update({"training_mlp": True})
+
+                outputs = model(**inputs)
+                loss = outputs.loss
+                loss.backward()
+                nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
+
+                self.optimizer.step()
+
+                progress_bar.update(1)
+                progress_bar.set_postfix({"Loss": loss.item()})
+        
         progress_bar.close()
 
     @torch.no_grad()

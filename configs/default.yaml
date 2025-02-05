@@ -33,6 +33,16 @@ training_args:
   warmup_ratio: 0
   frozen: False
   description: True
+  prompt_length: 8 
+  prompt_top_k: 4 
+  prompt_pool_size: 20 
+  prompt_embed_dim: 768 
+  prompt_init:  "uniform"
+  prompt_key_init: "uniform"
+  prompt-type: "coda-prompt"
+  gen_epochs: 50
+  num_sample_gen_per_epoch: 80
+  classifier_epochs: 200
 
 
 defaults:
