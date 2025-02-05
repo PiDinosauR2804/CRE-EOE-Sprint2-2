@@ -40,9 +40,9 @@ training_args:
   prompt_init:  "uniform"
   prompt_key_init: "uniform"
   prompt-type: "coda-prompt"
-  gen_epochs: 50
-  num_sample_gen_per_epoch: 80
-  classifier_epochs: 200
+  gen_epochs: 40
+  num_sample_gen_per_epoch: 50
+  classifier_epochs: 100
 
 
 defaults:

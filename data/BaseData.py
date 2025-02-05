@@ -31,14 +31,15 @@ class BaseHidden:
         res = []
         for epoch in range(epochs):
             res.append([])
-        for idx in range(self.num_class):
-            labels = idx
-            mean = self.means[idx].cpu().numpy().astype("float32")
-            cov = self.covariance.cpu().numpy().astype("float32")
-            samples = self.generate_data_base_on_means_and_cov(labels, mean, cov, num*epochs)
-            for epoch in range(epochs):
-                temp = samples[epoch*num:(epoch+1)*num]
-                res[epoch].extend(temp)
+        for idx in range(len(self.means)):
+            for idx_ in range(len(self.means[idx])):
+                labels = idx
+                mean = self.means[idx][idx_].cpu().numpy().astype("float32")
+                cov = self.covariance.cpu().numpy().astype("float32")
+                samples = self.generate_data_base_on_means_and_cov(labels, mean, cov, num*epochs)
+                for epoch in range(epochs):
+                    temp = samples[epoch*num:(epoch+1)*num]
+                    res[epoch].extend(temp)
         return res
 
 class BaseData:

@@ -97,12 +97,14 @@ class EoETrainer(BaseTrainer):
             MemoryData = BaseHidden(model.num_labels, model.expert_distribution[self.task_idx]['class_mean'], model.expert_distribution[self.task_idx]['accumulate_cov'])
             in_hidden_data = MemoryData.generate_hidden_data(self.args.num_sample_gen_per_epoch, self.args.gen_epochs)
             
+            
             self.train_mlp(
                 model=model,
                 train_dataset=in_hidden_data,
                 data_collator=float_data_collator,
-                training_mlp2=False
             ) 
+            
+            del in_hidden_data
 
             cur_test_data = data.filter(cur_labels, 'test')
             history_test_data = data.filter(seen_labels, 'test')
