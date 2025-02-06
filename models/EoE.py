@@ -237,6 +237,7 @@ class EoE(nn.Module):
             all_score_over_task = []
             all_score_over_class = []
             all_logits = []
+            max_size = 0
             for e_id in range(-1, self.num_tasks + 1):
                 if e_id == -1:
                     indices = None
@@ -261,12 +262,22 @@ class EoE(nn.Module):
                 scores_over_classes = scores_over_classes.transpose(-1, -2)
                 if e_id != -1:
                     scores_over_tasks[:, :e_id] = float('inf')  # no seen task
-                    logits = self.classifier[e_id](hidden_states)[:, :self.class_per_task]
+                    # logits = self.classifier[e_id](hidden_states)[:, :self.class_per_task]
+                    logits = self.classifier[e_id](hidden_states)
+                    max_size = max(max_size, logits.shape[-1])
                     all_logits.append(logits)
                 all_score_over_task.append(scores_over_tasks)
                 all_score_over_class.append(scores_over_classes)
             all_score_over_task = torch.stack(all_score_over_task, dim=1)  # (batch, expert_num, task_num)
             all_score_over_class = torch.stack(all_score_over_class, dim=1)  # (batch, expert_num, task_num)
+            
+            for i in range(len(all_logits)):
+                pad_size = max_size - all_logits[i].shape[-1]  # Tính số lượng padding cần thêm
+                if pad_size > 0:
+                    pad_tensor = torch.zeros(all_logits[i].shape[0], pad_size, device=all_logits[i].device)  
+                    all_logits[i] = torch.cat([all_logits[i], pad_tensor], dim=-1)  # Nối thêm padding vào logits
+
+            
             all_logits = torch.stack(all_logits, dim=1)
             indices = []
             # expert0_score_over_task = all_score_over_task[:, 0, :]  # (batch, task_num)
@@ -308,7 +319,8 @@ class EoE(nn.Module):
                 indices = torch.LongTensor([task_idx] * batch_size).to(self.device)
             idx = torch.arange(batch_size).to(self.device)
             all_logits = all_logits[idx, indices]
-            preds = all_logits.max(dim=-1)[1] + self.class_per_task * indices
+            # preds = all_logits.max(dim=-1)[1] + self.class_per_task * indices
+            preds = all_logits.max(dim=-1)[1]
             indices = indices.tolist() if isinstance(indices, torch.Tensor) else indices
             return ExpertOutput(
                 preds=preds,
