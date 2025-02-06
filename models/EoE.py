@@ -454,9 +454,6 @@ class EoE(nn.Module):
             loggerdb.log({f"train/cr_loss_2_{self.num_tasks}": ((total_log_term_1 / count_time)).item()})
             loss += 1 * (total_log_term_1 / count_time).squeeze(0)
                 
-                
-
-            loggerdb.log({f"train/cr_loss_{self.num_tasks}": (total_log_term / len(description_ids_list)).item()})
             loggerdb.log({f"train/total_loss_{self.num_tasks}": loss.item()})
             
             # Add thêm ====================================================================================
