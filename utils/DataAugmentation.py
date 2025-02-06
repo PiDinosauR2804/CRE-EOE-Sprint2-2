@@ -105,6 +105,10 @@ def relation_data_augmentation(data, num_labels, id2label, marker_id=(35022, 350
             old_description_list = {k: v for k, v in ins.items() if k.startswith('old_description_ids_')}
 
             new_ins.update(old_description_list)
+            
+            old_description_1_list = {k: v for k, v in ins.items() if k.startswith('old_description_1_ids_')}
+
+            new_ins.update(old_description_1_list)
 
             augment_data[augment_label].append(new_ins)
             # print("----------------------------")
@@ -148,6 +152,10 @@ def relation_data_augmentation(data, num_labels, id2label, marker_id=(35022, 350
 
             # Thêm các key-value vào new_ins
             new_ins.update(old_description_list)
+            
+            old_description_1_list = {k: v for k, v in ins.items() if k.startswith('old_description_1_ids_')}
+
+            new_ins.update(old_description_1_list)
             
             # print("----------------------------")
             # for key, value in new_ins.items():
