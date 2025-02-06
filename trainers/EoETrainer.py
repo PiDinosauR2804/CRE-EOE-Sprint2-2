@@ -26,6 +26,7 @@ class EoETrainer(BaseTrainer):
         super().__init__(args, **kwargs)
         self.task_idx = 0
         self.cur_seed = 0
+        # self.labels2idStrange = []
 
     def run(self, data, model, tokenizer, label_order, seed=None):
         if seed is not None:
@@ -44,6 +45,10 @@ class EoETrainer(BaseTrainer):
             self.task_idx = task_idx
             cur_labels = [data.label_list[c] for c in label_order[task_idx]]
             data.add_labels(cur_labels, task_idx)
+            
+            temp = []
+            # for i in range(len(cur_labels)):
+            #     temp.append()
 
             logger.info(f"***** Task-{task_idx + 1} *****")
             logger.info(f"Current classes: {' '.join(cur_labels)}")

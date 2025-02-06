@@ -122,7 +122,7 @@ class EoE(nn.Module):
         # freeze previous classifier and add new classifier for new task
         for param in self.classifier.parameters():
             param.requires_grad = False
-        new_classifier = nn.Linear(self.classifier_hidden_size, num_labels, device=self.device)
+        new_classifier = nn.Linear(self.classifier_hidden_size, self.num_old_labels + self.class_per_task, device=self.device)
         self.classifier.append(new_classifier)
         
         for param in self.temp_classifier.parameters():
