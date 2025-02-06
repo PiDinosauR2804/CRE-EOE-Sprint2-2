@@ -216,7 +216,7 @@ class EoETrainer(BaseTrainer):
         max_steps = self.args.num_sample_gen_per_epoch * self.args.classifier_epochs
         num_examples = self.args.num_sample_gen_per_epoch * self.args.gen_epochs
 
-        logger.info("***** Running training *****")
+        logger.info("***** Running training mlp *****")
         logger.info(f"  Num examples = {num_examples}")
         logger.info(f"  Num Epochs = {self.args.classifier_epochs}")
         logger.info(f"  Train batch size = {self.args.train_batch_size}")
