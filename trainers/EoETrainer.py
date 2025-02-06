@@ -61,7 +61,7 @@ class EoETrainer(BaseTrainer):
 
             pool = model.get_description_ids(cur_labels)
             old_pool = model.get_description_ids(seen_labels)
-            train_data_have_des = data.filter_and_add_desciption_and_2_old_description(cur_labels, pool, seen_labels, old_pool) 
+            train_data_have_des = data.filter_and_add_desciption_and_old_description(cur_labels, pool, seen_labels, old_pool) 
             
             num_train_labels = len(cur_labels)
             
