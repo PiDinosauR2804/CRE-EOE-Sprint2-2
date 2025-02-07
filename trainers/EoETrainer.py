@@ -125,6 +125,15 @@ class EoETrainer(BaseTrainer):
                 label2task_id=copy.deepcopy(data.label2task_id),
                 oracle=True,
             )
+            
+            a, b = self.eval(
+                model=model,
+                eval_dataset=history_test_dataset,
+                data_collator=default_data_collator,
+                seen_labels=seen_labels,
+                label2task_id=copy.deepcopy(data.label2task_id),
+                oracle=True,
+            )
 
             total_acc, total_hit = self.eval(
                 model=model,
