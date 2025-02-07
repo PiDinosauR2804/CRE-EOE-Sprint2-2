@@ -339,7 +339,7 @@ class EoE(nn.Module):
             
             preds = logits.max(dim=-1)[1]
             
-            loggerdb.log_metrics({f"train/mlp_{self.num_tasks}": loss.item()})
+            loggerdb.log({f"train/mlp_{self.num_tasks}": loss.item()})
 
             indices = indices.tolist() if isinstance(indices, torch.Tensor) else indices
             return ExpertOutput(
