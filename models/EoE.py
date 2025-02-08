@@ -426,32 +426,32 @@ class EoE(nn.Module):
 
             # Loss 3 CR Learning
 
-            total_log_term_1 = torch.zeros(1, device=self.device)
-            count_time = 0 
-            for id1, (k, v) in enumerate(old_description_1_hidden_states_dict.items()):
-                for id2, (k_, v_) in enumerate(old_description_1_hidden_states_dict.items()):
-                    if id2 <= id1:
-                        continue
-                    count_time += 1
-                    numerator_list = []
-                    denominator_list = []
-                    for kk, old_description_hidden_states in old_description_hidden_states_dict.items():
-                        numerator_list.append(torch.exp((v * old_description_hidden_states).sum(dim=1, keepdim=True) / self.tau))
-                        denominator_list.append(torch.exp((v * old_description_hidden_states).sum(dim=1, keepdim=True) / self.tau))
+            # total_log_term_1 = torch.zeros(1, device=self.device)
+            # count_time = 0 
+            # for id1, (k, v) in enumerate(old_description_1_hidden_states_dict.items()):
+            #     for id2, (k_, v_) in enumerate(old_description_1_hidden_states_dict.items()):
+            #         if id2 <= id1:
+            #             continue
+            #         count_time += 1
+            #         numerator_list = []
+            #         denominator_list = []
+            #         for kk, old_description_hidden_states in old_description_hidden_states_dict.items():
+            #             numerator_list.append(torch.exp((v * old_description_hidden_states).sum(dim=1, keepdim=True) / self.tau))
+            #             denominator_list.append(torch.exp((v * old_description_hidden_states).sum(dim=1, keepdim=True) / self.tau))
                                     
-                    denominator_list.append(torch.exp((v * v_).sum(dim=1, keepdim=True) / self.tau))
-                    denominator = torch.sum(torch.stack(denominator_list), dim=0)
-                    # Compute log term
-                    log_term = torch.zeros(batch_size, 1, device=self.device)
-                    for numerator in numerator_list:
-                        log_term += torch.log(numerator / denominator)
+            #         denominator_list.append(torch.exp((v * v_).sum(dim=1, keepdim=True) / self.tau))
+            #         denominator = torch.sum(torch.stack(denominator_list), dim=0)
+            #         # Compute log term
+            #         log_term = torch.zeros(batch_size, 1, device=self.device)
+            #         for numerator in numerator_list:
+            #             log_term += torch.log(numerator / denominator)
 
-                    total_log_term_1 += (log_term.mean()/len(numerator_list))
-            # print("----CR Loss-------")
-            # print((total_log_term / len(description_ids_list)).item())
+            #         total_log_term_1 += (log_term.mean()/len(numerator_list))
+            # # print("----CR Loss-------")
+            # # print((total_log_term / len(description_ids_list)).item())
             
-            loggerdb.log({f"train/cr_loss_2_{self.num_tasks}": ((total_log_term_1 / count_time)).item()})
-            loss += 0.5 * (total_log_term_1 / count_time).squeeze(0)
+            # loggerdb.log({f"train/cr_loss_2_{self.num_tasks}": ((total_log_term_1 / count_time)).item()})
+            # loss += 0.5 * (total_log_term_1 / count_time).squeeze(0)
                 
             loggerdb.log({f"train/total_loss_{self.num_tasks}": loss.item()})
             
