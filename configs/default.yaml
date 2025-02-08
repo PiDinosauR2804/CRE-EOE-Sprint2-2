@@ -43,6 +43,7 @@ training_args:
   gen_epochs: 40
   num_sample_gen_per_epoch: 50
   classifier_epochs: 100
+  num_description: 3
 
 
 defaults:

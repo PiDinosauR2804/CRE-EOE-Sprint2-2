@@ -57,7 +57,7 @@ class EoE(nn.Module):
         self.tau = 0.8
         self.label_description = {}
         self.label_description_ids = {}
-        self.number_description = 3
+        self.number_description = config.num_description
         self.temp_classifier = nn.ParameterList()
         self.classifier = nn.ParameterList()
 
